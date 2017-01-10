@@ -199,8 +199,6 @@ static int csv_display(const struct ifreq *ifr, void *unused)
 
 static int display(const struct ifreq *ifr, void *unused)
 {
-    printf("%s ", ifr->ifr_name);
-
 	saveInterfaceIpConfig(ifr, MANUAL);
     return 0;
 }
