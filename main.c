@@ -199,54 +199,15 @@ static int csv_display(const struct ifreq *ifr, void *unused)
 
 static int display(const struct ifreq *ifr, void *unused)
 {
-    char    str[NI_MAXHOST];
-
     printf("%s ", ifr->ifr_name);
-    if ( isInterfaceDynamic(ifr->ifr_name) )
-        printf("(dyn) ");
 
-    if ( isInterfacePlugged(ifr) )
-        printf("link: up ");
-    else
-        printf("link: down ");
-
-    if ( getMacAddress(ifr, str, sizeof(str)) == 0 )
-        printf("mac: %s ", str);
-
-    if ( getIpAddress(ifr, str, sizeof(str)) == 0 )
-        printf("ip: %s ", str);
-
-    if ( getIpMask(ifr, str, sizeof(str)) == 0 )
-        printf("mask: %s ", str);
-
-    if ( getIpBroadcast(ifr, str, sizeof(str)) == 0 )
-        printf("bcast: %s ", str);
-
-    if ( getIpGateway(ifr, str, sizeof(str)) == 0 )
-        printf("gw: %s ", str);
-
-    if ( getDomainNameServer(str, sizeof(str)) == 0 )
-        printf("ns: %s", str);
-
-    printf("\n");
-
+	saveInterfaceIpConfig(ifr, MANUAL);
     return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    int                     ret = -1,
-                            readonly,
-                            i;
-    const struct ifreq     *ifr = NULL;
-    config_t                conf,
-                            dummy;
-
-    if ( (ret = parse_options(argc, argv, &conf)) != 1 )
-        return ret;
-
-    argv += optind;
-    argc -= optind;
+    int ret = -1;
 
     if ( networkInit() )
     {
@@ -254,113 +215,8 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if ( conf.all )
-    {
-        addAllInterfaces();
-        conf.all = 0;
-    }
+    addAllInterfaces();
 
-    memset(&dummy, 0, sizeof(config_t));
-    readonly = memcmp(&dummy, &conf, sizeof(config_t)) == 0;
-
-    if ( argc == 0 )
-    {
-        /* Display all
-         */
-        if ( !readonly )
-        {
-            fprintf(stderr, "No interface provided\n");
-            goto error;
-        }
-
-        ret = foreachInterfaceIpv4(display_func, NULL);
-    }
-    else if ( readonly )
-    {
-        /* Display if one by one
-         */
-        for ( i = 0 ; i < argc ; i++ )
-        {
-            if ( (ifr = getInterfaceByNameIpv4(argv[i])) == NULL )
-            {
-                fprintf(stderr, "Interface %s not found\n", argv[i]);
-                continue;
-            }
-
-            if ( (ret = display_func(ifr, NULL)) )
-                goto error;
-        }
-    }
-    else
-    {
-        /* Config
-         */
-        int     ip = 0;
-        if ( conf.ip || conf.mask || conf.bcast || conf.gw || conf.dhcp )
-        {
-            if ( argc != 1 )
-            {
-                fprintf(stderr, "Multiple interfaces provided\n");
-                goto error;
-            }
-
-            if ( (ifr = getInterfaceByNameIpv4(argv[0])) == NULL )
-            {
-                fprintf(stderr, "Can not find interface\n");
-                goto error;
-            }
-
-            ip++;
-        }
-
-
-        if ( conf.dhcp )
-        {
-            ret = setInterfaceDhcp(ifr);
-        }
-        else
-        {
-            ret = 0;
-
-            if ( conf.ip && (ret |= setInterfaceIpAddress(ifr, conf.ip)) )
-                fprintf(stderr, "Failed: set IP address on %s\n", argv[0]);
-            if ( conf.mask && (ret |= setInterfaceIpMask(ifr, conf.mask)) )
-                fprintf(stderr, "Failed: set IP mask on %s\n", argv[0]);
-            if ( conf.bcast && (ret |= setInterfaceIpBroadcast(ifr, conf.bcast)) )
-                fprintf(stderr, "Failed: set bcast address on %s\n", argv[0]);
-            if ( conf.gw && (ret |= setInterfaceIpGateway(ifr, conf.gw)) )
-                fprintf(stderr, "Failed: set default gateway on %s\n", argv[0]);
-        }
-
-        /* Only save on success
-         */
-        if ( !ret && conf.save )
-        {
-            for ( i = 0 ; i < argc ; i++ )
-            {
-                if ( (ifr = getInterfaceByNameIpv4(argv[i])) == NULL )
-                    continue;
-
-                ret = saveInterfaceIpConfig(ifr, conf.dhcp ? AUTO : MANUAL);
-                if ( ret )
-                {
-                    fprintf(stderr, "Failed: write configuration for %s\n", ifr->ifr_name);
-                    break;
-                }
-            }
-        }
-
-        if ( conf.ns && (ret |= setDomainNameServer(conf.ns)) )
-            fprintf(stderr, "Failed: set name server\n");
-
-        if ( !ret )
-        {
-            printf("Configuration successed !\n");
-        }
-    }
-
-error:
-    networkClean();
-
+	ret = foreachInterfaceIpv4(display_func, NULL);
     return ret;
 }

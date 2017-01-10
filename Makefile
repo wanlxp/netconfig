@@ -16,9 +16,9 @@ OBJS=${SRCS:.c=.o}
 
 # debug option
 ifeq ($(DEBUG), 1)
-CFLAGS+=-O0 -g -DDEBUG
+CFLAGS+=-O0 -g -DDEBUG -Wno-unused-function
 else
-CFLAGS+=-O3
+CFLAGS+=-O3 -Wno-unused-function
 endif
 
 # verbose option
