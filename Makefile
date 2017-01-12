@@ -1,4 +1,4 @@
-TARGETS=netconfig
+TARGETS=save
 
 DEBUG?=0
 VERBOSE?=0
@@ -36,7 +36,7 @@ all: $(TARGETS)
 	$(echo-cmd) " CC    $@"
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
-netconfig: $(OBJS)
+save : $(OBJS)
 	$(echo-cmd) " LD    $@"
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^
 

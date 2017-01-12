@@ -732,6 +732,7 @@ static int saveInterfaceIpConfigManual(FILE *file, const struct ifreq *ifr)
     if ( ifr == NULL )
         return -1;
 
+    fprintf(file, "auto %s\n", ifr->ifr_name);
     fprintf(file, "iface %s inet static\n", ifr->ifr_name);
 
     if ( getIpAddress(ifr, str, sizeof(str)) == 0 )
