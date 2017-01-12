@@ -27,8 +27,8 @@ static struct ifreq     ifreqs[NBIFACE];
 
 static int              fd;
 
-static const char       *interface = "/etc/network/interfaces";
-static const char       *tmpInterface = "/etc/network/interfaces.tmp";
+static const char       *interface = "/mnt/boot/conf/interfaces";
+static const char       *tmpInterface = "/mnt/boot/conf/interfaces.tmp";
 
 static const char       *resolv = "/etc/resolv.conf";
 static const char       *tmpResolv = "/etc/resolv.conf.tmp";
